@@ -14,16 +14,32 @@ defmodule ExMisp do
   """
   def do_request(method, rest_url, body \\ [], headers \\ [], options \\ []) do
     default_headers = [
-      "Authoirzation": Application.get_env(:ex_misp, :key),
+      "Authorization": Application.get_env(:ex_misp, :key),
       "Accept": @type_header,
-      "Connect-Type": @type_header
+      "Content-Type": @type_header
     ]
     url = Application.get_env(:ex_misp, :url)
     case HTTPoison.request(method, url <> rest_url, body, headers ++ default_headers, options) do
       {:ok, res} ->
-        res
-      {:error, res} ->
-        res
+        with {:ok, 200}   <- check_status(res),
+             {:ok, json}  <- Poison.decode(res.body)
+        do
+          json
+        else
+          {:error, err} ->
+            {:error, err}
+        end
+      {:error, err} ->
+        {:error, err}
+    end
+  end
+
+  defp check_status(res) do
+    case res.status_code do
+      200 ->
+        {:ok, 200}
+      _ ->
+        {:error, res}
     end
   end
 end
