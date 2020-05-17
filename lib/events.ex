@@ -12,4 +12,11 @@ defmodule ExMisp.Events do
     body = event_json
     ExMisp.do_request(method, rest_url, body)
   end
+
+  def add_attributes(attributes, event_id) do
+    {:ok, attributes_json} = Poison.encode(attributes)
+    rest_url = "/attributes/add/#{event_id}"
+    body = attributes_json
+    ExMisp.do_request("POST", rest_url, body)
+  end
 end
